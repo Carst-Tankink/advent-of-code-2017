@@ -1,4 +1,4 @@
-package captcha
+package Dec01.captcha
 
 import scala.io.StdIn
 
