@@ -10,7 +10,7 @@ object Checksum {
 
 
   def diffMaxMin(ints: Seq[Int]): Int = {
-    val maxMin: (Int, Int) = ints.foldRight ((Int.MinValue, Int.MaxValue)) ((value, acc) => {
+    val maxMin: (Int, Int) = ints.foldRight((Int.MinValue, Int.MaxValue))((value, acc) => {
       val newMax = if (value >= acc._1) value else acc._1
       val newMin = if (value <= acc._2) value else acc._2
       (newMax, newMin)
@@ -20,13 +20,22 @@ object Checksum {
   }
 
 
+  def divideEvenlyDivisible(ints: Seq[Int]): Int = {
+    val (x1, x2) : (Int, Int) = ints.combinations(2)
+      .map(els => (els.head, els.tail.head))
+      .filter { case (e1, e2) => e1 % e2 == 0 || e2 % e1  == 0}
+      .toSeq
+      .head
+
+    if (x1 > x2) x1 / x2 else x2 / x1
+  }
+
   def main(args: Array[String]): Unit = {
-    val spreadSheet: Seq[String] = Source.fromFile("input").getLines().toSeq
-    val lines: Seq[Seq[Int]] = spreadSheet.map(parseLine)
+    val lines: Seq[Seq[Int]] = Source.fromFile("input").getLines().toSeq.map(parseLine)
 
-    val solution: Int =  lines.map(diffMaxMin).sum
+    val solution2: Int = lines.map(divideEvenlyDivisible).sum
+    println(solution2)
 
-    println(solution)
   }
 
 }
