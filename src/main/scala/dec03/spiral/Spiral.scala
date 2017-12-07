@@ -32,29 +32,26 @@ object Spiral {
 
   def manhattanDistance(p1: CartesianCoordinate, p2: CartesianCoordinate): Int = Math.abs(p1.x - p2.x) + Math.abs(p1.y - p2.y)
 
-  def updateDirAndBound(location: CartesianCoordinate, dir: Direction, bound: Int): (Direction, Int) = {
-    val isLowerCorner = location == CartesianCoordinate(bound, -bound)
+  def updateDirection(location: CartesianCoordinate, dir: Direction, bound: Int): Direction = {
     val outOfBounds = location.add(dir.vector) > bound
-    if (isLowerCorner) (dir, bound+1)
-    else if (outOfBounds) (next(dir), bound)
-    else (dir, bound)
+    if (outOfBounds) next(dir) else dir
   }
 
-  def updateDirection(direction: Direction, bound: Int, location: CartesianCoordinate): Direction = {
-    if (location.add(direction.vector) > bound) next(direction)
-    else direction
+  def updateBound(location: CartesianCoordinate, bound: Int): Int = {
+    val isLowerCorner = location == CartesianCoordinate(bound, -bound)
+    if (isLowerCorner) bound + 1 else bound
   }
-
-  def updateBound(direction: Direction, bound: Int): Int = if (direction == Up) bound + 1 else bound
 
   def spiralToCartesian(spiralCoordinate: Int): CartesianCoordinate = {
 
     def iter(current: Int, location: CartesianCoordinate, direction: Direction, bound: Int): CartesianCoordinate = {
       if (current >= spiralCoordinate) location
       else {
-        val newLocation = location.add(direction.vector)
-        val (newDirection, newBound) = updateDirAndBound(newLocation, direction, bound)
-        iter(current + 1, newLocation, newDirection, newBound)
+        val newBound = updateBound(location.add(direction.vector), bound)
+        iter(current + 1,
+          location.add(direction.vector),
+          updateDirection(location.add(direction.vector), direction, newBound),
+          newBound)
       }
     }
 
