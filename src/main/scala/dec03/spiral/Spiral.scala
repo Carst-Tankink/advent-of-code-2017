@@ -36,6 +36,18 @@ object Spiral {
     val outOfBounds = location.add(dir.vector) > bound
     if (outOfBounds) next(dir) else dir
   }
+  def makeGrid(spiralCoordinate: Int, current: Int, grid: Map[Int, CartesianCoordinate], direction: Direction, bound: Int): Map[Int, CartesianCoordinate] = {
+    val location: CartesianCoordinate = grid.getOrElse(current - 1, CartesianCoordinate(0,0))
+    val newLocation = location.add(direction.vector)
+    if (current >= spiralCoordinate) grid + (current -> newLocation)
+    else {
+      val newBound = updateBound(newLocation, bound)
+      makeGrid(spiralCoordinate, current + 1,
+        grid + (current  -> newLocation),
+        updateDirection(newLocation, direction, newBound),
+        newBound)
+    }
+  }
 
   def updateBound(location: CartesianCoordinate, bound: Int): Int = {
     val isLowerCorner = location == CartesianCoordinate(bound, -bound)
@@ -43,21 +55,9 @@ object Spiral {
   }
 
   def spiralToCartesian(spiralCoordinate: Int): CartesianCoordinate = {
-
-    def iter(current: Int, location: CartesianCoordinate, direction: Direction, bound: Int): CartesianCoordinate = {
-      if (current >= spiralCoordinate) location
-      else {
-        val newBound = updateBound(location.add(direction.vector), bound)
-        iter(current + 1,
-          location.add(direction.vector),
-          updateDirection(location.add(direction.vector), direction, newBound),
-          newBound)
-      }
-    }
-
-    iter(1, CartesianCoordinate(0, 0), Right, 1)
-
+    makeGrid(spiralCoordinate, 1, Map(0 -> CartesianCoordinate(-1, 0)), Right, 1).get(spiralCoordinate).orNull
   }
+
 
   def main(args: Array[String]): Unit = {
     while (true) {
@@ -65,6 +65,7 @@ object Spiral {
       val input = scala.io.StdIn.readInt()
       val solution = manhattanDistance(CartesianCoordinate(0, 0), spiralToCartesian(input))
       println(solution)
+
     }
   }
 }
