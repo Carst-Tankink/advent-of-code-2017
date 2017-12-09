@@ -37,7 +37,6 @@ object Registers {
 
   def apply(instr: Instruction, registers: Map[String, Int]): Map[String, Int] = {
     if (!instr.condition(registers)) {
-
       registers
     }
     else {
@@ -45,18 +44,22 @@ object Registers {
       val newValue = current + (if (instr.op == Inc) instr.amount else -instr.amount)
       val newReg = registers.updated(instr.register, newValue)
       newReg
-
     }
   }
 
-  def runProgram(instructions: Seq[Instruction]): Map[String, Int] = {
-    instructions.foldLeft(Map.empty:Map[String, Int]) ((registers, i) => apply(i, registers))
+  def runProgram(instructions: Seq[Instruction]): (Int, Map[String, Int]) = {
+    instructions.foldLeft((Int.MinValue, Map.empty:Map[String, Int])) ((maxAndRegisters, i) => {
+      val newRegister = apply(i, maxAndRegisters._2)
+      val max = if (newRegister.isEmpty) maxAndRegisters._1 else Math.max(newRegister.maxBy(_._2)._2, maxAndRegisters._1)
+      (max, newRegister)
+    })
   }
 
   def main(args: Array[String]): Unit = {
     val strings = Source.fromFile("input").getLines()
     val instructions: Seq[Instruction] = strings.map(parseInstruction).toSeq
-    val registers: Map[String, Int] = runProgram(instructions)
-    println(registers.maxBy(_._2))
+    val result: (Int,Map[String, Int]) = runProgram(instructions)
+    println(result._2.maxBy(_._2))
+    println(result._1)
   }
 }
