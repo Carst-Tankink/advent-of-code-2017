@@ -56,7 +56,7 @@ object Streams {
       println("Score: " + score)
 
       val garbage = sumGarbage(stream)
-      println("Garbage: " + garbage{})
+      println("Garbage: " + garbage)
 
     }
   }
