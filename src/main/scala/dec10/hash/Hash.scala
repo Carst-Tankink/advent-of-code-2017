@@ -40,7 +40,6 @@ object Hash {
     round(0, HashState(seed, 0, 0))
   }
 
-
   def makeDense(sparseHash: HashState) : List[Int] = {
     sparseHash.state.grouped(16).map(group => group.reduceLeft((x, y) => x ^ y)).toList
   }
