@@ -15,10 +15,8 @@ case class HashState(state: List[Int], currentPosition: Int, skipSize: Int) {
   }
 
   def update(length: Int): HashState = {
-    println("State: " + this + " length: " + length)
     val sublist = getSublist(state, currentPosition, currentPosition + length)
     val newState = inject(state, sublist.reverse, currentPosition)
-    println("Newstate: " + newState)
     val newPosition = (currentPosition + length + skipSize) % state.size
     copy(state = newState, currentPosition = newPosition, skipSize = skipSize + 1)
   }
@@ -26,20 +24,43 @@ case class HashState(state: List[Int], currentPosition: Int, skipSize: Int) {
 
 object Hash {
 
-  def hashFunction(input: Seq[Int]): Seq[Int] = {
-    val seed: List[Int] = List.range(0, 256)
+  def hashFunction(input: Seq[Int], inState: HashState): HashState = {
     input
-      .filter(l => l <= seed.length)
-      .foldLeft(HashState(seed, 0, 0))((state, length) => state.update(length)).state
+      .filter(l => l <= inState.state.length)
+      .foldLeft(inState)((state, length) => state.update(length))
+  }
+
+  def runRounds(input: List[Int]): HashState = {
+    def round(roundNumber: Int, inputState: HashState): HashState = {
+      if (roundNumber == 64) inputState
+      else round(roundNumber + 1, hashFunction(input, inputState))
+    }
+
+    val seed = List.range(0, 256)
+    round(0, HashState(seed, 0, 0))
+  }
+
+
+  def makeDense(sparseHash: HashState) : List[Int] = {
+    sparseHash.state.grouped(16).map(group => group.reduceLeft((x, y) => x ^ y)).toList
+  }
+
+  private def hashString(inputString: String) = {
+    val input: Seq[Int] = inputString.map(_.toInt)
+    val padded = input ++ List(17, 31, 73, 47, 23)
+
+    val sparseHash = runRounds(padded.toList)
+    val denseHash = makeDense(sparseHash)
+
+    val hex = denseHash.map((x: Int) => "%02x".format(x))
+    hex
   }
 
   def main(args: Array[String]): Unit = {
     println("Input: ")
-    val input: Seq[Int] = scala.io.StdIn.readLine().split(",").map(_.toInt)
-    val hash = hashFunction(input)
-    println("Hash: ", hash)
-    val checkSum = hash.head * hash.tail.head
-    println("Checksum: " + checkSum)
-  }
+    val inputString = scala.io.StdIn.readLine()
+    val hash: List[String] = hashString(inputString)
+    println("hash: " + hash.mkString)
+    }
 }
 
