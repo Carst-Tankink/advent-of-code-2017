@@ -32,27 +32,32 @@ object HexGrid {
     case "nw" => NW
   }
 
-  def walk(steps: Seq[Step]): CubeCoordinate = {
-    steps.foldLeft(CubeCoordinate(0, 0, 0))((location, step) => location + step)
+  def walk(steps: Seq[Step]): (CubeCoordinate, Int) = {
+    steps.foldLeft((CubeCoordinate(0, 0, 0), Int.MinValue)){ case ((location, maxDist), step) =>
+      val newLocation = location + step
+      val dist  = distanceFromOrigin(newLocation)
+      (newLocation, Math.max(dist, maxDist))
+    }
   }
 
   def distanceFromOrigin(location: CubeCoordinate): Int = {
     Math.max(Math.max(Math.abs(location.x), Math.abs(location.y)), Math.abs(location.z))
   }
 
-  def calculateDistance(input: String): Int = {
+  def calculateSolution(input: String): (Int, Int) = {
     val steps: Seq[Step] = input.split(",").map(parseToStep)
     val finalLocation = walk(steps)
     println("Final location " + finalLocation)
-    val distance = distanceFromOrigin(finalLocation)
-    distance
+    val distance = distanceFromOrigin(finalLocation._1)
+    (distance, finalLocation._2)
   }
 
   def main(args: Array[String]): Unit = {
     while(true) {
       val input = scala.io.StdIn.readLine("Input: ")
-      val distance: Int = calculateDistance(input)
+      val (distance, max) = calculateSolution(input)
       println("Distance: ", distance)
+      println("Max: ", max)
     }
 
   }
