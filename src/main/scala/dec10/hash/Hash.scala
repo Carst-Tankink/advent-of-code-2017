@@ -44,15 +44,14 @@ object Hash {
     sparseHash.state.grouped(16).map(group => group.reduceLeft((x, y) => x ^ y)).toList
   }
 
-  private def hashString(inputString: String) = {
+  def hashString(inputString: String): List[String] = {
     val input: Seq[Int] = inputString.map(_.toInt)
     val padded = input ++ List(17, 31, 73, 47, 23)
 
     val sparseHash = runRounds(padded.toList)
     val denseHash = makeDense(sparseHash)
 
-    val hex = denseHash.map((x: Int) => "%02x".format(x))
-    hex
+    denseHash.map((x: Int) => "%02x".format(x))
   }
 
   def main(args: Array[String]): Unit = {
