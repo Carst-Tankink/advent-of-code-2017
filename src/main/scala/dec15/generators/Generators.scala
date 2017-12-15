@@ -2,18 +2,24 @@ package dec15.generators
 
 import java.lang.Long.toBinaryString
 
-class Generator(prev: Long, factor: Long) {
+class Generator(prev: Long, factor: Long, criterion: Int) {
   val modulus: Long = 2147483647
 
   def next(): (Long, Generator) = {
     val nextVal = (prev * factor) % modulus
-    (nextVal, new Generator(nextVal, factor))
+
+    val generator = new Generator(nextVal, factor, criterion)
+
+    if (nextVal % criterion == 0)
+      (nextVal, generator)
+    else
+      generator.next()
   }
 }
 
-case class GenA(seed: Long) extends Generator(seed, 16807)
+case class GenA(seed: Long) extends Generator(seed, 16807, 4)
 
-case class GenB(seed: Long) extends Generator(seed, 48271)
+case class GenB(seed: Long) extends Generator(seed, 48271, 8)
 
 object Generators {
 
@@ -32,24 +38,16 @@ object Generators {
   }._1
 
   def main(args: Array[String]): Unit = {
-
-    val testA = GenA(65)
-    val testB = GenB(8921)
-
-    val start = System.currentTimeMillis()
-
-    println("Test score: " + judge(testA, testB))
-
-    val end = System.currentTimeMillis()
-
-    println("Run time: " + (end - start))
-
     println("Input a:")
     val inputA = scala.io.StdIn.readLong()
     println("Input b:")
     val inputB = scala.io.StdIn.readLong()
 
+    val start = System.currentTimeMillis()
+    val score = judge(GenA(inputA), GenB(inputB))
+    val end = System.currentTimeMillis()
+    println("Run time: " + (end - start))
 
-    println("Score: " + judge(GenA(inputA), GenB(inputB)))
+    println("Score: " + score)
   }
 }
