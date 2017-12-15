@@ -1,7 +1,5 @@
 package dec15.generators
 
-import java.lang.Long.toBinaryString
-
 class Generator(prev: Long, factor: Long, criterion: Int) {
   val modulus: Long = 2147483647
 
@@ -17,25 +15,29 @@ class Generator(prev: Long, factor: Long, criterion: Int) {
   }
 }
 
-case class GenA(seed: Long) extends Generator(seed, 16807, 4)
+case class GenA(seed: Long) extends Generator(seed, 16807, 1)
 
-case class GenB(seed: Long) extends Generator(seed, 48271, 8)
+case class GenB(seed: Long) extends Generator(seed, 48271, 1)
 
 object Generators {
 
   def scorePair(left: Long, right: Long): Int = {
-    if (toBinaryString(left).takeRight(16).equals(toBinaryString(right).takeRight(16))) 1 else 0
+    val mask = 0xFFFF
+    if ((left & mask) == (right & mask)) 1 else 0
   }
 
   def judge(gen1: Generator, gen2: Generator): Long = {
-    val steps = 40000000
-    List.range(0, steps).foldLeft(0, gen1, gen2) { case ((score, genA, genB), _) =>
-      val (nextA, nextGenA) = genA.next()
-      val (nextB, nextGenB) = genB.next()
-
-      (score + scorePair(nextA, nextB), nextGenA, nextGenB)
+    def rec(steps: Int, score: Int, genA: Generator, genB: Generator): Int = {
+      if (steps == 0) score
+      else {
+        val (nextA, nextGenA) = genA.next()
+        val (nextB, nextGenB) = genB.next()
+        rec(steps - 1, score + scorePair(nextA, nextB), nextGenA, nextGenB)
+      }
     }
-  }._1
+
+    rec(40000000, 0, gen1, gen2)
+  }
 
   def main(args: Array[String]): Unit = {
     println("Input a:")
