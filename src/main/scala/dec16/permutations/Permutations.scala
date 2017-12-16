@@ -38,18 +38,46 @@ object Permutations {
     case 'p' => Partner(s(1), s(3))
   }
 
-  val startString: String = List.range(0, 16).map(x => (x+ 97).toChar).mkString
+  val startString: String = List.range(0, 16).map(x => (x + 97).toChar).mkString
+
   def dance(start: String, steps: Seq[Step]): String = {
     steps.foldLeft(start)((order, step) => step(order))
   }
 
-  def repeatDance(steps: Seq[Step]): String = {
-    def rec(stepsLeft: Long, input: String) : String = {
-      if (stepsLeft == 0) input
-      else rec(stepsLeft -1, dance(input, steps))
+
+  def findCycle(input: String, steps: Seq[Step]): (Int, Int) = {
+    def searchCycleStart(input: String, seen: Set[String]): String = {
+      if (seen.contains(input)) input
+      else searchCycleStart(dance(input, steps), seen + input)
     }
 
-    rec(1000000000L, startString)
+    def stepsToStart(from: String, to: String, s: Int): Int = {
+      if (from == to) s
+      else stepsToStart(dance(from, steps), to, s + 1)
+    }
+
+    def cycleLength(start: String, s: String, length: Int): Int = {
+      if (start == s) length
+      else cycleLength(start, dance(s, steps), length + 1)
+    }
+
+    val start = searchCycleStart(input, Set.empty)
+    val toStart = stepsToStart(input, start, 0)
+    val cLength = cycleLength(start, dance(start, steps), 1)
+    (toStart, cLength)
+  }
+
+  def repeatDance(steps: Seq[Step]): String = {
+    def rec(stepsLeft: Long, input: String): String = {
+      if (stepsLeft == 0) input
+      else rec(stepsLeft - 1, dance(input, steps))
+    }
+
+    val (untilCycle, cycleLength) = findCycle(startString, steps)
+    val totalSteps = 1000000000L
+    val stepsAfterCycle = (totalSteps - untilCycle) % cycleLength
+    val startBeforeCycle = rec(untilCycle, startString)
+    rec(stepsAfterCycle, startBeforeCycle)
   }
 
   def main(args: Array[String]): Unit = {
