@@ -32,24 +32,34 @@ object Permutations {
 
   def parseStep(s: String): Step = s.head match {
     case 's' => Spin(Integer.parseInt(s.tail))
-    case 'x' => {
+    case 'x' =>
       val tokens = s.tail.split('/')
       Exchange(Integer.parseInt(tokens(0)), Integer.parseInt(tokens(1)))
-    }
     case 'p' => Partner(s(1), s(3))
   }
 
-  def dance(steps: Seq[Step]): String = {
-    val start = List.range(0, 16).map(x => (x+ 97).toChar)
-    steps.foldLeft(start.mkString)((order, step) => step(order))
+  val startString: String = List.range(0, 16).map(x => (x+ 97).toChar).mkString
+  def dance(start: String, steps: Seq[Step]): String = {
+    steps.foldLeft(start)((order, step) => step(order))
+  }
+
+  def repeatDance(steps: Seq[Step]): String = {
+    def rec(stepsLeft: Long, input: String) : String = {
+      if (stepsLeft == 0) input
+      else rec(stepsLeft -1, dance(input, steps))
+    }
+
+    rec(1000000000L, startString)
   }
 
   def main(args: Array[String]): Unit = {
     while (true) {
       println("Input: ")
       val steps: Seq[Step] = scala.io.StdIn.readLine().split(",").map(s => parseStep(s))
-      val finalOrder = dance(steps)
+      val finalOrder = dance(startString, steps)
       println("Final " + finalOrder)
+      val partTwoFinal = repeatDance(steps)
+      println("Final after one billion: " + partTwoFinal)
     }
   }
 }
