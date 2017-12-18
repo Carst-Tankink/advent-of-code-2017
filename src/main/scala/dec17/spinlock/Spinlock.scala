@@ -1,5 +1,7 @@
 package dec17.spinlock
 
+case class SpinState(afterZero: Long, position: Long, length: Long)
+
 case class ListZipper(left: List[Int], right: List[Int]) {
   def insert(i: Int): ListZipper = {
     copy(left = left, right = right.head :: i :: right.tail)
@@ -34,10 +36,23 @@ object Spinlock {
     })
   }
 
+
+  def calculateSpin(stepSize: Int): Long = {
+    Stream.range(1, 50000001).foldLeft(SpinState(0, 0, 1))((state, i) => {
+      val newPosition = (state.position + stepSize) % state.length
+      val afterZero = if (newPosition == 0) i else state.afterZero
+
+      SpinState(afterZero, newPosition + 1, state.length + 1)
+    }).afterZero
+  }
+
   def main(args: Array[String]): Unit = {
     println("Input:")
     val stepSize = scala.io.StdIn.readInt()
     val finalList = insertValues(stepSize)
     println("Value after head: " + finalList.step().currentValue)
+
+    val spinLockFirst = calculateSpin(stepSize)
+    println("Value after steps: " + spinLockFirst)
   }
 }
