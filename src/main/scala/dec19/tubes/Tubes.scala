@@ -68,23 +68,23 @@ object Tubes {
       })
       .get
 
-  def walkMaze(input: Map[(Int, Int), Node]): String = {
-    def step(acc: String, pos: Node, dir: Direction): String = {
+  def walkMaze(input: Map[(Int, Int), Node]): (String, Int) = {
+    def step(acc: String, pos: Node, dir: Direction, steps: Int): (String, Int) = {
       val nextDir = pos match {
         case p@Crossing(_, _) => newDir(dir, p, input)
         case _ => dir
       }
 
       val nextPos = input.get(nextDir.next(pos.x, pos.y))
-      if (nextPos.isEmpty) acc
-      else step(nextPos.get.getChar().map(c => acc + c).getOrElse(acc), nextPos.get, nextDir)
+      if (nextPos.isEmpty) (acc, steps)
+      else step(nextPos.get.getChar().map(c => acc + c).getOrElse(acc), nextPos.get, nextDir, steps + 1)
     }
 
     val start = input.find { case ((_, y), _) => y == 0 }.get._2
 
     println("Start: " + start)
 
-    step("", start, Down)
+    step("", start, Down, 1)
   }
 
   def main(args: Array[String]): Unit = {
@@ -94,10 +94,11 @@ object Tubes {
       .map(n => (n.x, n.y) -> n)
       .toMap
 
-    val word: String = walkMaze(input)
+    val (word, steps) = walkMaze(input)
     //    println("Input: \n" + input.mkString("\n"))
 
     println("Word: " + word)
+    println("Steps: " + steps)
   }
 }
 
