@@ -78,7 +78,6 @@ object Fractals {
 
   def generateFractal(rules: Map[Block, Block], target: Int): Block = {
     def rec(pic: Block, i: Int): Block = {
-      println("Pic @" + i + ": " + pic )
       if (i == target) pic
       else rec(expand(pic, rules), i + 1)
     }
@@ -100,5 +99,7 @@ object Fractals {
     val picture = generateFractal(ruleMap, 5)
 
     println("On: " + picture.content.flatMap(l => l.map(b => if (b) 1 else 0)).sum)
+    val eighteen = generateFractal(ruleMap, 18)
+    println("On: " + eighteen.content.flatMap(l => l.map(b => if (b) 1 else 0)).sum)
   }
 }
