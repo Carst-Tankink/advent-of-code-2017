@@ -5,7 +5,6 @@ import scala.io.Source
 case class Block(content: List[List[Boolean]]) {
   override def toString: String = content.map(l => l.map(x => if (x) "#" else ".").mkString).mkString("/")
 
-
   def rotate(b: Block): Block = Block(b.content.transpose.map(_.reverse))
 
   def variants: Set[Block] = {
@@ -22,67 +21,84 @@ case class Block(content: List[List[Boolean]]) {
   }
 }
 
-case class Rule(input: Block, output: Block) {
-  override def toString: String = input + " => " + output
-
-
-  def matches(in: Block): Boolean = {
-    true
-  }
-}
-
 object Fractals {
   def toBlock(input: String): Block = {
     val c = input.trim.split('/').map(row => row.map(c => if (c == '.') false else true).toList).toList
     Block(c)
   }
 
-  def toRules(l: String): Set[Rule] = {
+  def toRules(l: String): Set[(Block, Block)] = {
     val tokens = l.split("=>").toList
     val output = tokens(1)
     toBlock(tokens.head).variants.map(i => {
-      Rule(i, toBlock(output))
+      (i, toBlock(output))
     })
   }
 
-  def expandLines(lines: List[List[Boolean]], divisor: Int): List[List[List[Boolean]]] = {
-    val columns = lines.transpose.grouped(divisor).foldLeft(List.empty)((blocks, group) => {
-      blocks
-    })
-    List.empty
-  }
-
-  def expand(pic: List[List[Boolean]]): List[List[Boolean]] = {
-    val divisor = if (pic.length % 2 == 0) 2 else 3
-    pic.grouped(divisor).foldLeft(List.empty)((blocks, lines: List[List[Boolean]]) => {
-      val x = expandLines(lines, divisor)
-      blocks
-    })
-    pic
-  }
-
-  def generateFractal(rules: Map[Block, Rule], target: Int): List[List[Boolean]] = {
-    def rec(pic: List[List[Boolean]], i: Int): List[List[Boolean]] = {
-      if (i == target) pic
-      else rec(expand(pic), i + 1)
+  def concatBlocks(line: List[Block]): Block = {
+    def rec(l: List[List[List[Boolean]]], acc: List[List[Boolean]]): List[List[Boolean]] =
+    if (l.exists(_.isEmpty)) acc
+    else {3
+      val heads: List[Boolean] = l.flatMap(_.head)
+      val tails: List[List[List[Boolean]]] = l.map(_.tail)
+      rec(tails, acc ++ List(heads))
     }
 
-    val start = List(
+    Block(rec(line.map(_.content), List.empty))
+  }
+
+  def divide(b: Block): List[List[Block]] = {
+    val divisor = if (b.content.size % 2 == 0) 2 else 3
+    b.content
+      .grouped(divisor)
+      .map((g: List[List[Boolean]]) => {
+        val parts: List[List[List[Boolean]]] = g.map(l => l.grouped(divisor).toList)
+        if (divisor == 2) {
+          val tops = parts.head
+          val bottoms = parts.tail.head
+          (tops zip bottoms).map(p => Block(List(p._1, p._2)))
+        } else {
+          val tops = parts.head
+          val middles = parts(1)
+          val bottoms = parts(2)
+          (tops zip middles zip bottoms).map(p => Block(List(p._1._1, p._1._2, p._2)))
+        }
+      })
+      .toList
+  }
+
+  def expand(pic: Block, rules: Map[Block, Block]): Block = {
+    val div = divide(pic)
+
+    val expanded: List[List[Block]] = div.map(l => l.map(rules(_)))
+
+    val mergedPerLine: List[Block] = expanded.map((line: List[Block]) => concatBlocks(line))
+    Block(mergedPerLine.flatMap(b => b.content))
+  }
+
+  def generateFractal(rules: Map[Block, Block], target: Int): Block = {
+    def rec(pic: Block, i: Int): Block = {
+      println("Pic @" + i + ": " + pic )
+      if (i == target) pic
+      else rec(expand(pic, rules), i + 1)
+    }
+
+    val start = Block(List(
       List(false, true, false),
       List(false, false, true),
       List(true, true, true)
-    )
+    ))
 
 
     rec(start, 0)
   }
 
   def main(args: Array[String]): Unit = {
-    val ruleMap: Map[Block, Rule] = Source.fromFile("input").getLines()
-      .flatMap(toRules).toSet
-      .groupBy((x: Rule) => x.input)
-      .mapValues(r => r.head)
+    val ruleMap: Map[Block, Block] = Source.fromFile("input").getLines()
+      .flatMap(toRules)
+      .toMap
     val picture = generateFractal(ruleMap, 5)
 
+    println("On: " + picture.content.flatMap(l => l.map(b => if (b) 1 else 0)).sum)
   }
 }
