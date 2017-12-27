@@ -126,9 +126,9 @@ object Virus {
       .flatMap { case (l, y) => l.map { case (s, x) => (x - horizontalOffset, y - verticalOffset) -> s } }
       .toMap
 
-//    val finalStatus = run(10000, statusMap)
+    val finalStatus = run(10000, statusMap)
 
-//    println("Infections: " + finalStatus.infections)
+    println("Infections: " + finalStatus.infections)
 
     val finalStatusEvolved = runEvolved(10000000, statusMap)
     println("Infections: " + finalStatusEvolved.infections)
